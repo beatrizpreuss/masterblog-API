@@ -12,6 +12,19 @@ POSTS = [
 
 @app.route('/api/posts', methods=['GET'])
 def get_posts():
+    """Retrieve blog posts, optionally sorted by title or content.
+
+    Accepts optional query parameters to sort the list of posts by
+    'title' or 'content' in ascending or descending order.
+
+    Query Parameters:
+        sort (str, optional): The field to sort by ('title' or 'content').
+        direction (str, optional): Sort direction ('asc' or 'desc').
+
+    Returns:
+        Response: A JSON list of blog posts, sorted if parameters are valid.
+        Tuple[Response, int]: An error message and 400 status code if query parameters are invalid.
+    """
     query_sort = request.args.get("sort", "")
     query_direction = request.args.get("direction", "")
 
@@ -25,13 +38,25 @@ def get_posts():
         sorted_posts = (sorted(POSTS, key=lambda x:x[query_sort], reverse=reverse))
         return jsonify(sorted_posts), 200
 
-
     return jsonify(POSTS), 200
-
 
 
 @app.route('/api/posts', methods=['POST'])
 def add_post():
+    """Add a new blog post to the in-memory list of posts.
+
+    Accepts a JSON payload containing 'title' and 'content' fields.
+    If either field is missing or empty, returns a 400 error. On success,
+    creates a new post with a unique ID and returns it.
+
+    Request Body (application/json):
+        title (str): The title of the blog post.
+        content (str): The content of the blog post.
+
+    Returns:
+        Tuple[dict, int]: The newly created post and HTTP 201 status code on success.
+        Tuple[str, int]: An error message and HTTP 400 status code if input is invalid.
+    """
     data = request.get_json()
     title = data.get("title")
     content = data.get("content")
@@ -49,6 +74,19 @@ def add_post():
 
 @app.route('/api/posts/<id>', methods=['DELETE'])
 def delete_post(id):
+    """Delete a blog post by its ID.
+
+    Searches for a post with the specified ID in the in-memory post list.
+    If found, deletes the post and returns a success message. If not found,
+    returns a 404 error.
+
+    Args:
+        id (str): The ID of the post to delete (converted to int internally).
+
+    Returns:
+        Tuple[str, int]: A success message and HTTP 200 status code if the post is deleted.
+        Tuple[str, int]: An error message and HTTP 404 status code if the post is not found.
+    """
     for post in POSTS:
         if post["id"] == int(id):
             POSTS.remove(post)
@@ -58,6 +96,24 @@ def delete_post(id):
 
 @app.route('/api/posts/<id>', methods=['PUT'])
 def update_post(id):
+    """Update an existing blog post by its ID.
+
+    Accepts a JSON payload containing optional 'title' and/or 'content' fields.
+    If a post with the given ID exists, updates its data accordingly.
+    Empty string values are ignored (fields remain unchanged). Returns the updated
+    post data on success, or a 404 error if the post is not found.
+
+    Args:
+        id (str): The ID of the post to update (converted to int internally).
+
+    Request Body (application/json):
+        title (str, optional): The new title of the post. If empty or not provided, title is unchanged.
+        content (str, optional): The new content of the post. If empty or not provided, content is unchanged.
+
+    Returns:
+        Tuple[dict, int]: The updated post and HTTP 200 status code if successful.
+        Tuple[str, int]: An error message and HTTP 404 status code if the post is not found.
+    """
     data = request.get_json()
     title = data.get("title")
     content = data.get("content")
@@ -75,6 +131,19 @@ def update_post(id):
 
 @app.route('/api/posts/search', methods=['GET'])
 def search_post():
+    """Search blog posts by title and/or content.
+
+    Retrieves query parameters from the URL to filter posts by title and/or content.
+    The search is case-insensitive and partial matches are allowed. If no query
+    parameters are provided, all posts are returned.
+
+    Query Parameters:
+        title (str, optional): Substring to search for in post titles.
+        content (str, optional): Substring to search for in post content.
+
+    Returns:
+        Tuple[Response, int]: A JSON list of matching blog posts and HTTP 200 status code.
+    """
     query_title = request.args.get("title", "").lower()
     query_content = request.args.get("content", "").lower()
 
