@@ -5,8 +5,8 @@ app = Flask(__name__)
 CORS(app)  # This will enable CORS for all routes
 
 POSTS = [
-    {"id": 1, "title": "First post", "content": "This is the first post."},
-    {"id": 2, "title": "Second post", "content": "This is the second post."},
+    {"post_id": 1, "title": "First post", "content": "This is the first post."},
+    {"post_id": 2, "title": "Second post", "content": "This is the second post."},
 ]
 
 
@@ -31,7 +31,7 @@ def get_posts():
     sort_keys = {"title", "content"}
     if query_sort not in sort_keys and query_sort != "":
         return "Wrong sort value", 400
-    elif query_direction not in ("asc", "desc", ""):
+    if query_direction not in ("asc", "desc", ""):
         return "Wrong sort direction value", 400
     if query_sort in sort_keys:
         reverse = query_direction == "desc" #True if client is sorting by desc order
@@ -66,14 +66,14 @@ def add_post():
     if content == "":
         return "Content of post is missing", 400
 
-    post_id = max(post["id"] for post in POSTS) + 1 if POSTS else 1
-    new_post = {"id": post_id, "title": title, "content": content}
+    post_id = max(post["post_id"] for post in POSTS) + 1 if POSTS else 1
+    new_post = {"post_id": post_id, "title": title, "content": content}
     POSTS.append(new_post)
     return new_post, 201
 
 
-@app.route('/api/posts/<id>', methods=['DELETE'])
-def delete_post(id):
+@app.route('/api/posts/<post_id>', methods=['DELETE'])
+def delete_post(post_id):
     """Delete a blog post by its ID.
 
     Searches for a post with the specified ID in the in-memory post list.
@@ -81,21 +81,21 @@ def delete_post(id):
     returns a 404 error.
 
     Args:
-        id (str): The ID of the post to delete (converted to int internally).
+        post_id (str): The ID of the post to delete (converted to int internally).
 
     Returns:
         Tuple[str, int]: A success message and HTTP 200 status code if the post is deleted.
         Tuple[str, int]: An error message and HTTP 404 status code if the post is not found.
     """
     for post in POSTS:
-        if post["id"] == int(id):
+        if post["post_id"] == int(post_id):
             POSTS.remove(post)
-            return f"Post with id {id} has been deleted successfully", 200
+            return f"Post with id {post_id} has been deleted successfully", 200
     return "Post not found", 404
 
 
-@app.route('/api/posts/<id>', methods=['PUT'])
-def update_post(id):
+@app.route('/api/posts/<post_id>', methods=['PUT'])
+def update_post(post_id):
     """Update an existing blog post by its ID.
 
     Accepts a JSON payload containing optional 'title' and/or 'content' fields.
@@ -104,7 +104,7 @@ def update_post(id):
     post data on success, or a 404 error if the post is not found.
 
     Args:
-        id (str): The ID of the post to update (converted to int internally).
+        post_id (str): The ID of the post to update (converted to int internally).
 
     Request Body (application/json):
         title (str, optional): The new title of the post. If empty or not provided, title is unchanged.
@@ -119,12 +119,12 @@ def update_post(id):
     content = data.get("content")
 
     for post in POSTS:
-        if post["id"] == int(id):
+        if post["post_id"] == int(post_id):
             if title != "":
                 post["title"] = title
             if content != "":
                 post["content"] = content
-            updated_post = {"id": id, "title": title, "content": content}
+            updated_post = {"post_id": post_id, "title": title, "content": content}
             return updated_post, 200
     return "Post not found", 404
 
